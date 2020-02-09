@@ -26,6 +26,7 @@ func (api *API) InitPost() {
 	api.BaseRoutes.Post.Handle("/info", api.APISessionRequired(getPostInfo)).Methods("GET")
 	api.BaseRoutes.Post.Handle("/files/info", api.APISessionRequired(getFileInfosForPost)).Methods("GET")
 	api.BaseRoutes.PostsForChannel.Handle("", api.APISessionRequired(getPostsForChannel)).Methods("GET")
+	api.BaseRoutes.PostsForChannel.Handle("/ua", api.APISessionRequired(getChannelPostsUA)).Methods("GET")
 	api.BaseRoutes.PostsForUser.Handle("/flagged", api.APISessionRequired(getFlaggedPostsForUser)).Methods("GET")
 
 	api.BaseRoutes.ChannelForUser.Handle("/posts/unread", api.APISessionRequired(getPostsForChannelAroundLastUnread)).Methods("GET")
@@ -256,6 +257,71 @@ func getPostsForChannel(c *Context, w http.ResponseWriter, r *http.Request) {
 	}
 
 	c.App.AddCursorIdsForPostList(list, afterPost, beforePost, since, page, perPage, collapsedThreads)
+	clientPostList := c.App.PreparePostListForClient(c.AppContext, list)
+	clientPostList, err = c.App.SanitizePostListMetadataForUser(c.AppContext, clientPostList, c.AppContext.Session().UserId)
+	if err != nil {
+		c.Err = err
+		return
+	}
+
+	if err := clientPostList.EncodeJSON(w); err != nil {
+		mlog.Warn("Error while writing response", mlog.Err(err))
+	}
+}
+
+func getChannelPostsUA(c *Context, w http.ResponseWriter, r *http.Request) {
+	c.RequireChannelId()
+	if c.Err != nil {
+		return
+	}
+
+	afterString := r.URL.Query().Get("after")
+	beforeString := r.URL.Query().Get("before")
+	descString := r.URL.Query().Get("desc")
+
+	var after, before int64
+	var desc bool
+	var parseError error
+
+	if afterString != "" {
+		after, parseError = strconv.ParseInt(afterString, 10, 64)
+		if parseError != nil {
+			c.SetInvalidParam("after")
+			return
+		}
+	}
+
+	if beforeString != "" {
+		before, parseError = strconv.ParseInt(beforeString, 10, 64)
+		if parseError != nil {
+			c.SetInvalidParam("before")
+			return
+		}
+	}
+
+	if descString != "" {
+		desc, parseError = strconv.ParseBool(descString)
+		if parseError != nil {
+			c.SetInvalidParam("desc")
+			return
+		}
+	}
+
+	if !c.App.SessionHasPermissionToChannel(c.AppContext, *c.AppContext.Session(), c.Params.ChannelId, model.PermissionReadChannel) {
+		c.SetPermissionError(model.PermissionReadChannel)
+		return
+	}
+
+	var list *model.PostList
+	var err *model.AppError
+
+	list, err = c.App.GetChannelPostsUA(c.Params.ChannelId, after, before, desc, c.Params.Page, c.Params.PerPage)
+
+	if err != nil {
+		c.Err = err
+		return
+	}
+
 	clientPostList := c.App.PreparePostListForClient(c.AppContext, list)
 	clientPostList, err = c.App.SanitizePostListMetadataForUser(c.AppContext, clientPostList, c.AppContext.Session().UserId)
 	if err != nil {
