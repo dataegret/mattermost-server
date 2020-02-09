@@ -39,7 +39,7 @@ func (a *App) canSendPushNotifications() bool {
 
 func (a *App) SendNotifications(c request.CTX, post *model.Post, team *model.Team, channel *model.Channel, sender *model.User, parentPostList *model.PostList, setOnline bool) ([]string, error) {
 	// Do not send notifications in archived channels
-	if channel.DeleteAt > 0 {
+	if channel.DeleteAt > 0 || post.GetProps()["skip_notifications"] == true {
 		return []string{}, nil
 	}
 
