@@ -8,13 +8,6 @@ else
 	mkdir -p $(GOBIN)/linux_amd64
 	env GOOS=linux GOARCH=amd64 $(GO) build -o $(GOBIN)/linux_amd64 $(GOFLAGS) -trimpath -ldflags '$(LDFLAGS)' ./...
 endif
-	@echo Build Linux arm64
-ifeq ($(BUILDER_GOOS_GOARCH),"linux_arm64")
-	env GOOS=linux GOARCH=arm64 $(GO) build -o $(GOBIN) $(GOFLAGS) -trimpath -ldflags '$(LDFLAGS)' ./...
-else
-	mkdir -p $(GOBIN)/linux_arm64
-	env GOOS=linux GOARCH=arm64 $(GO) build -o $(GOBIN)/linux_arm64 $(GOFLAGS) -trimpath -ldflags '$(LDFLAGS)' ./...
-endif
 
 build-osx:
 	@echo Build OSX amd64
@@ -220,7 +213,7 @@ package-linux-arm64: package-prep
 	@# Cleanup
 	rm -rf $(DIST_ROOT)/linux_arm64
 
-package-linux: package-linux-amd64 package-linux-arm64
+package-linux: package-linux-amd64
 
 package-windows: package-prep
 	@# Create needed directories
@@ -260,6 +253,6 @@ endif
 	@# Cleanup
 	rm -rf $(DIST_ROOT)/windows
 
-package: package-osx package-linux package-windows
+package: package-linux
 	rm -rf tmpprepackaged
 	rm -rf $(DIST_PATH)
