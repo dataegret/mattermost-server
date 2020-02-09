@@ -32,6 +32,9 @@ const (
 
 var atMentionPattern = regexp.MustCompile(`\B@`)
 
+var reTripleBackticks1 = regexp.MustCompile("([^\n])```")
+var reTripleBackticks2 = regexp.MustCompile("```([^\n])")
+
 type postServiceWrapper struct {
 	app AppIface
 }
@@ -147,6 +150,9 @@ func (a *App) deduplicateCreatePost(post *model.Post) (foundPost *model.Post, er
 }
 
 func (a *App) CreatePost(c *request.Context, post *model.Post, channel *model.Channel, triggerWebhooks, setOnline bool) (savedPost *model.Post, err *model.AppError) {
+	post.Message = reTripleBackticks1.ReplaceAllString(post.Message, "$1\n```")
+	post.Message = reTripleBackticks2.ReplaceAllString(post.Message, "```\n$1")
+
 	foundPost, err := a.deduplicateCreatePost(post)
 	if err != nil {
 		return nil, err
@@ -565,6 +571,9 @@ func (a *App) DeleteEphemeralPost(userID, postID string) {
 }
 
 func (a *App) UpdatePost(c *request.Context, post *model.Post, safeUpdate bool) (*model.Post, *model.AppError) {
+	post.Message = reTripleBackticks1.ReplaceAllString(post.Message, "$1\n```")
+	post.Message = reTripleBackticks2.ReplaceAllString(post.Message, "```\n$1")
+
 	post.SanitizeProps()
 
 	postLists, nErr := a.Srv().Store.Post().Get(context.Background(), post.Id, model.GetPostsOptions{}, "", a.Config().GetSanitizeOptions())
@@ -768,6 +777,11 @@ func (a *App) publishWebsocketEventForPermalinkPost(post *model.Post, message *m
 }
 
 func (a *App) PatchPost(c *request.Context, postID string, patch *model.PostPatch) (*model.Post, *model.AppError) {
+	if patch.Message != nil {
+		*patch.Message = reTripleBackticks1.ReplaceAllString(*patch.Message, "$1\n```")
+		*patch.Message = reTripleBackticks2.ReplaceAllString(*patch.Message, "```\n$1")
+	}
+
 	post, err := a.GetSinglePost(postID, false)
 	if err != nil {
 		return nil, err
