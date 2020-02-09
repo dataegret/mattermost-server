@@ -1,6 +1,6 @@
 dist: | check-style test package
 
-build-linux: build-linux-amd64 build-linux-arm64
+build-linux: build-linux-amd64
 
 build-linux-amd64:
 	@echo Build Linux amd64
@@ -235,7 +235,7 @@ package-linux-arm64: package-prep
 	@# Cleanup
 	rm -rf $(DIST_ROOT)/linux_arm64
 
-package-linux: package-linux-amd64 package-linux-arm64
+package-linux: package-linux-amd64
 
 package-windows: package-prep
 	@# Create needed directories
@@ -275,6 +275,6 @@ endif
 	@# Cleanup
 	rm -rf $(DIST_ROOT)/windows
 
-package: package-osx package-linux package-windows
+package: package-linux
 	rm -rf tmpprepackaged
 	rm -rf $(DIST_PATH)
