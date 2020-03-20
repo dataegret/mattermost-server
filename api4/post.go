@@ -27,6 +27,7 @@ func (api *API) InitPost() {
 	api.BaseRoutes.Post.Handle("/files/info", api.APISessionRequired(getFileInfosForPost)).Methods("GET")
 	api.BaseRoutes.PostsForChannel.Handle("", api.APISessionRequired(getPostsForChannel)).Methods("GET")
 	api.BaseRoutes.PostsForChannel.Handle("/ua", api.APISessionRequired(getChannelPostsUA)).Methods("GET")
+	api.BaseRoutes.PostsForChannel.Handle("/ua/count", api.APISessionRequired(countChannelPostsUA)).Methods("GET")
 	api.BaseRoutes.PostsForUser.Handle("/flagged", api.APISessionRequired(getFlaggedPostsForUser)).Methods("GET")
 
 	api.BaseRoutes.ChannelForUser.Handle("/posts/unread", api.APISessionRequired(getPostsForChannelAroundLastUnread)).Methods("GET")
@@ -330,6 +331,42 @@ func getChannelPostsUA(c *Context, w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := clientPostList.EncodeJSON(w); err != nil {
+		mlog.Warn("Error while writing response", mlog.Err(err))
+	}
+}
+
+func countChannelPostsUA(c *Context, w http.ResponseWriter, r *http.Request) {
+	c.RequireChannelId()
+	if c.Err != nil {
+		return
+	}
+
+	afterString := r.URL.Query().Get("after")
+
+	var after int64
+	var parseError error
+
+	if afterString != "" {
+		after, parseError = strconv.ParseInt(afterString, 10, 64)
+		if parseError != nil {
+			c.SetInvalidParam("after")
+			return
+		}
+	}
+
+	if !c.App.SessionHasPermissionToChannel(c.AppContext, *c.AppContext.Session(), c.Params.ChannelId, model.PermissionReadChannel) {
+		c.SetPermissionError(model.PermissionReadChannel)
+		return
+	}
+
+	count, err := c.App.CountChannelPostsUA(c.Params.ChannelId, after)
+
+	if err != nil {
+		c.Err = err
+		return
+	}
+
+	if err := json.NewEncoder(w).Encode(count); err != nil {
 		mlog.Warn("Error while writing response", mlog.Err(err))
 	}
 }

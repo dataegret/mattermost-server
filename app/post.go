@@ -1119,6 +1119,25 @@ func (a *App) GetChannelPostsUA(channelID string, after, before int64, desc bool
 	return postList, nil
 }
 
+func (a *App) CountChannelPostsUA(channelID string, after int64) (*model.PostCount, *model.AppError) {
+	var postCount *model.PostCount
+	var err error
+
+	postCount, err = a.Srv().Store().Post().CountChannelPostsUA(channelID, after)
+
+	if err != nil {
+		var invErr *store.ErrInvalidInput
+		switch {
+		case errors.As(err, &invErr):
+			return nil, model.NewAppError("CountChannelPostsUA", "app.post.count_channel_posts_ua.get.app_error", nil, invErr.Error(), http.StatusBadRequest)
+		default:
+			return nil, model.NewAppError("CountChannelPostsUA", "app.post.count_channel_posts_ua.get.app_error", nil, err.Error(), http.StatusInternalServerError)
+		}
+	}
+
+	return postCount, nil
+}
+
 func (a *App) GetPostAfterTime(channelID string, time int64, collapsedThreads bool) (*model.Post, *model.AppError) {
 	post, err := a.Srv().Store().Post().GetPostAfterTime(channelID, time, collapsedThreads)
 	if err != nil {

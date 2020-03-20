@@ -539,6 +539,11 @@ func (_m *PostStore) GetChannelPostsUA(channelId string, after, before int64, de
 	return r0, nil
 }
 
+func (_m *PostStore) CountChannelPostsUA(channelId string, after int64) (*model.PostCount, error) {
+	var r0 *model.PostCount
+	return r0, nil
+}
+
 // GetPostsBatchForIndexing provides a mock function with given fields: startTime, startPostID, limit
 func (_m *PostStore) GetPostsBatchForIndexing(startTime int64, startPostID string, limit int) ([]*model.PostForIndexing, error) {
 	ret := _m.Called(startTime, startPostID, limit)
