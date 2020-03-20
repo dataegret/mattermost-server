@@ -1130,4 +1130,5 @@ type AppIface interface {
 	ViewChannel(view *model.ChannelView, userID string, currentSessionId string, collapsedThreadsSupported bool) (map[string]int64, *model.AppError)
 	WriteFile(fr io.Reader, path string) (int64, *model.AppError)
 	GetChannelPostsUA(channelId string, after, before int64, desc bool, page, perPage int) (*model.PostList, *model.AppError)
+	CountChannelPostsUA(channelId string, after int64) (*model.PostCount, *model.AppError)
 }
