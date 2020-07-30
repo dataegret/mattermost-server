@@ -1,0 +1,13 @@
+/var/log/mattermost/mattermost.log /var/log/mattermost/notifications.log {
+    monthly
+    rotate 120
+    dateext
+    dateformat -%Y%m
+    dateyesterday
+    compress
+    delaycompress
+    notifempty
+    missingok
+    copytruncate
+    su mattermost mattermost
+}
