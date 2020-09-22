@@ -166,8 +166,10 @@ func (a *App) CreateUserAsAdmin(c *request.Context, user *model.User, redirect s
 		return nil, err
 	}
 
-	if err := a.Srv().EmailService.SendWelcomeEmail(ruser.Id, ruser.Email, ruser.EmailVerified, ruser.DisableWelcomeEmail, ruser.Locale, a.GetSiteURL(), redirect); err != nil {
-		mlog.Warn("Failed to send welcome email to the new user, created by system admin", mlog.Err(err))
+	if !rePseudoUser.MatchString(user.Username) {
+		if err := a.Srv().EmailService.SendWelcomeEmail(ruser.Id, ruser.Email, ruser.EmailVerified, ruser.DisableWelcomeEmail, ruser.Locale, a.GetSiteURL(), redirect); err != nil {
+			mlog.Warn("Failed to send welcome email to the new user, created by system admin", mlog.Err(err))
+		}
 	}
 
 	return ruser, nil
@@ -295,14 +297,16 @@ func (a *App) createUserOrGuest(c *request.Context, user *model.User, guest bool
 	message.Add("user_id", ruser.Id)
 	a.Publish(message)
 
-	if pluginsEnvironment := a.GetPluginsEnvironment(); pluginsEnvironment != nil {
-		a.Srv().Go(func() {
-			pluginContext := pluginContext(c)
-			pluginsEnvironment.RunMultiPluginHook(func(hooks plugin.Hooks) bool {
-				hooks.UserHasBeenCreated(pluginContext, ruser)
-				return true
-			}, plugin.UserHasBeenCreatedID)
-		})
+	if c != nil {
+		if pluginsEnvironment := a.GetPluginsEnvironment(); pluginsEnvironment != nil {
+			a.Srv().Go(func() {
+				pluginContext := pluginContext(c)
+				pluginsEnvironment.RunMultiPluginHook(func(hooks plugin.Hooks) bool {
+					hooks.UserHasBeenCreated(pluginContext, ruser)
+					return true
+				}, plugin.UserHasBeenCreatedID)
+			})
+		}
 	}
 
 	return ruser, nil
@@ -908,12 +912,14 @@ func (a *App) userDeactivated(c *request.Context, userID string) *model.AppError
 	// when disable a user, userDeactivated is called for the user and the
 	// bots the user owns. Only notify once, when the user is the owner, not the
 	// owners bots
-	if !user.IsBot {
-		a.notifySysadminsBotOwnerDeactivated(c, userID)
-	}
+	if c != nil {
+		if !user.IsBot {
+			a.notifySysadminsBotOwnerDeactivated(c, userID)
+		}
 
-	if *a.Config().ServiceSettings.DisableBotsWhenOwnerIsDeactivated {
-		a.disableUserBots(c, userID)
+		if *a.Config().ServiceSettings.DisableBotsWhenOwnerIsDeactivated {
+			a.disableUserBots(c, userID)
+		}
 	}
 
 	return nil
