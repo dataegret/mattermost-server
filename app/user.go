@@ -174,8 +174,10 @@ func (a *App) CreateUserAsAdmin(c request.CTX, user *model.User, redirect string
 		return nil, err
 	}
 
-	if err := a.Srv().EmailService.SendWelcomeEmail(ruser.Id, ruser.Email, ruser.EmailVerified, ruser.DisableWelcomeEmail, ruser.Locale, a.GetSiteURL(), redirect); err != nil {
-		c.Logger().Warn("Failed to send welcome email to the new user, created by system admin", mlog.Err(err))
+	if !rePseudoUser.MatchString(user.Username) {
+		if err := a.Srv().EmailService.SendWelcomeEmail(ruser.Id, ruser.Email, ruser.EmailVerified, ruser.DisableWelcomeEmail, ruser.Locale, a.GetSiteURL(), redirect); err != nil {
+			c.Logger().Warn("Failed to send welcome email to the new user, created by system admin", mlog.Err(err))
+		}
 	}
 
 	return ruser, nil
@@ -316,13 +318,15 @@ func (a *App) createUserOrGuest(c request.CTX, user *model.User, guest bool) (*m
 	message.Add("user_id", ruser.Id)
 	a.Publish(message)
 
-	pluginContext := pluginContext(c)
-	a.Srv().Go(func() {
-		a.ch.RunMultiHook(func(hooks plugin.Hooks) bool {
-			hooks.UserHasBeenCreated(pluginContext, ruser)
-			return true
-		}, plugin.UserHasBeenCreatedID)
-	})
+	if c != nil {
+		pluginContext := pluginContext(c)
+		a.Srv().Go(func() {
+			a.ch.RunMultiHook(func(hooks plugin.Hooks) bool {
+				hooks.UserHasBeenCreated(pluginContext, ruser)
+				return true
+			}, plugin.UserHasBeenCreatedID)
+		})
+	}
 
 	// For cloud yearly subscriptions, if the current user count of the workspace exceeds the number of seats initially purchased
 	// (plus the “threshold” of 10%), then a subscriptionHistoryEvent object would need to be created and added to the subscriptionHistory
@@ -939,12 +943,14 @@ func (a *App) userDeactivated(c request.CTX, userID string) *model.AppError {
 	// when disable a user, userDeactivated is called for the user and the
 	// bots the user owns. Only notify once, when the user is the owner, not the
 	// owners bots
-	if !user.IsBot {
-		a.notifySysadminsBotOwnerDeactivated(c, userID)
-	}
+	if c != nil {
+		if !user.IsBot {
+			a.notifySysadminsBotOwnerDeactivated(c, userID)
+		}
 
-	if *a.Config().ServiceSettings.DisableBotsWhenOwnerIsDeactivated {
-		a.disableUserBots(c, userID)
+		if *a.Config().ServiceSettings.DisableBotsWhenOwnerIsDeactivated {
+			a.disableUserBots(c, userID)
+		}
 	}
 
 	return nil
