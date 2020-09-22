@@ -64,6 +64,8 @@ const (
 	UserRolesMaxLength    = 256
 )
 
+var rePseudoUser = regexp.MustCompile(`^zzz_`)
+
 //msgp:tuple User
 
 // User contains the details about the user.
@@ -546,7 +548,11 @@ func (u *User) PreUpdate() {
 
 func (u *User) SetDefaultNotifications() {
 	u.NotifyProps = make(map[string]string)
-	u.NotifyProps[EmailNotifyProp] = "true"
+	if rePseudoUser.MatchString(u.Username) {
+		u.NotifyProps[EmailNotifyProp] = "false"
+	} else {
+		u.NotifyProps[EmailNotifyProp] = "true"
+	}
 	u.NotifyProps[PushNotifyProp] = UserNotifyMention
 	u.NotifyProps[DesktopNotifyProp] = UserNotifyMention
 	u.NotifyProps[DesktopSoundNotifyProp] = "true"
