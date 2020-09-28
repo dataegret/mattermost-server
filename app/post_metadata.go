@@ -136,10 +136,10 @@ func (a *App) PreparePostForClient(c request.CTX, originalPost *model.Post, isNe
 						mlog.Warn("Sameroom pseudouser creation error: " + err.Error())
 					} else {
 						a.UpdateActive(nil, realUser, false)
-						path := "users/" + post.UserId + "/profile.png"
-						if reader, err := a.FileReader(path); err == nil {
-							a.SetProfileImageFromFile(realUser.Id, reader)
-						}
+						// path := "users/" + post.UserId + "/profile.png"
+						// if reader, err := a.FileReader(path); err == nil {
+						// 	a.SetProfileImageFromFile(realUser.Id, reader)
+						// }
 					}
 				}
 				if realUser != nil {
