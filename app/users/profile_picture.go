@@ -14,6 +14,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"regexp"
 	"strings"
 
 	"github.com/golang/freetype"
@@ -26,6 +27,8 @@ import (
 const (
 	imageProfilePixelDimension = 128
 )
+
+var rePseudoUser = regexp.MustCompile(`^zzz_`)
 
 func (us *UserService) GetProfileImage(user *model.User) ([]byte, bool, error) {
 	if *us.config().FileSettings.DriverName == "" {
@@ -95,10 +98,10 @@ func (us *UserService) GetDefaultProfileImage(user *model.User) ([]byte, error) 
 		return botDefaultImage, nil
 	}
 
-	return createProfileImage(user.Username, user.Id, *us.config().FileSettings.InitialFont)
+	return createProfileImage(user.Username, user.Nickname, user.Id, *us.config().FileSettings.InitialFont)
 }
 
-func createProfileImage(username string, userID string, initialFont string) ([]byte, error) {
+func createProfileImage(username string, nickname string, userID string, initialFont string) ([]byte, error) {
 	colors := []color.NRGBA{
 		{197, 8, 126, 255},
 		{227, 207, 18, 255},
@@ -133,6 +136,10 @@ func createProfileImage(username string, userID string, initialFont string) ([]b
 	seed := h.Sum32()
 
 	initial := string(strings.ToUpper(username)[0])
+	if rePseudoUser.MatchString(username) {
+		runes := []rune(strings.ToUpper(nickname))
+		initial = string(runes[0])
+	}
 
 	font, err := getFont(initialFont)
 	if err != nil {
