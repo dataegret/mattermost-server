@@ -1794,7 +1794,7 @@ var specialSearchChar = []string{
 	"<",
 	">",
 	"+",
-	"-",
+	// "-",
 	"(",
 	")",
 	"~",
