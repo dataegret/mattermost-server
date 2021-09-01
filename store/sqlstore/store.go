@@ -360,7 +360,7 @@ func (ss *SqlStore) specialSearchChars() []string {
 		"<",
 		">",
 		"+",
-		"-",
+		// "-",
 		"(",
 		")",
 		"~",
