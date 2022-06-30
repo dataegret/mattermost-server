@@ -18,17 +18,17 @@ import (
 func (ts *TeamService) DefaultChannelNames() []string {
 	names := []string{"town-square"}
 
-	if len(ts.config().TeamSettings.ExperimentalDefaultChannels) == 0 {
-		names = append(names, "off-topic")
-	} else {
-		seenChannels := map[string]bool{"town-square": true}
-		for _, channelName := range ts.config().TeamSettings.ExperimentalDefaultChannels {
-			if !seenChannels[channelName] {
-				names = append(names, channelName)
-				seenChannels[channelName] = true
-			}
-		}
-	}
+	// if len(ts.config().TeamSettings.ExperimentalDefaultChannels) == 0 {
+	// 	names = append(names, "off-topic")
+	// } else {
+	// 	seenChannels := map[string]bool{"town-square": true}
+	// 	for _, channelName := range ts.config().TeamSettings.ExperimentalDefaultChannels {
+	// 		if !seenChannels[channelName] {
+	// 			names = append(names, channelName)
+	// 			seenChannels[channelName] = true
+	// 		}
+	// 	}
+	// }
 
 	return names
 }

@@ -51,17 +51,17 @@ func (s *channelsWrapper) GetChannelMember(channelID string, userID string) (*mo
 func (a *App) DefaultChannelNames() []string {
 	names := []string{"town-square"}
 
-	if len(a.Config().TeamSettings.ExperimentalDefaultChannels) == 0 {
-		names = append(names, "off-topic")
-	} else {
-		seenChannels := map[string]bool{"town-square": true}
-		for _, channelName := range a.Config().TeamSettings.ExperimentalDefaultChannels {
-			if !seenChannels[channelName] {
-				names = append(names, channelName)
-				seenChannels[channelName] = true
-			}
-		}
-	}
+	// if len(a.Config().TeamSettings.ExperimentalDefaultChannels) == 0 {
+	// 	names = append(names, "off-topic")
+	// } else {
+	// 	seenChannels := map[string]bool{"town-square": true}
+	// 	for _, channelName := range a.Config().TeamSettings.ExperimentalDefaultChannels {
+	// 		if !seenChannels[channelName] {
+	// 			names = append(names, channelName)
+	// 			seenChannels[channelName] = true
+	// 		}
+	// 	}
+	// }
 
 	return names
 }
