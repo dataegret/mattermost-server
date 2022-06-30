@@ -55,12 +55,18 @@ func createPost(c *Context, w http.ResponseWriter, r *http.Request) {
 	auditRec.AddMeta("post", &post)
 
 	hasPermission := false
-	if c.App.SessionHasPermissionToChannel(*c.AppContext.Session(), post.ChannelId, model.PermissionCreatePost) {
-		hasPermission = true
-	} else if channel, err := c.App.GetChannel(post.ChannelId); err == nil {
-		// Temporary permission check method until advanced permissions, please do not copy
-		if channel.Type == model.ChannelTypeOpen && c.App.SessionHasPermissionToTeam(*c.AppContext.Session(), channel.TeamId, model.PermissionCreatePostPublic) {
+	if channel, err := c.App.GetChannel(post.ChannelId); err == nil {
+		if channel.Name == "town-square" {
+			if c.App.SessionHasPermissionTo(*c.AppContext.Session(), model.PermissionManageSystem) {
+				hasPermission = true
+			}
+		} else if c.App.SessionHasPermissionToChannel(*c.AppContext.Session(), post.ChannelId, model.PermissionCreatePost) {
 			hasPermission = true
+		} else {
+			// Temporary permission check method until advanced permissions, please do not copy
+			if channel.Type == model.ChannelTypeOpen && c.App.SessionHasPermissionToTeam(*c.AppContext.Session(), channel.TeamId, model.PermissionCreatePostPublic) {
+				hasPermission = true
+			}
 		}
 	}
 
