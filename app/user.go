@@ -2189,9 +2189,9 @@ func (a *App) userBelongsToChannels(userID string, channelIDs []string) (bool, *
 }
 
 func (a *App) GetViewUsersRestrictions(userID string) (*model.ViewUsersRestrictions, *model.AppError) {
-	if a.HasPermissionTo(userID, model.PermissionViewMembers) {
-		return nil, nil
-	}
+	// if a.HasPermissionTo(userID, model.PermissionViewMembers) {
+	// 	return nil, nil
+	// }
 
 	teamIDs, nErr := a.Srv().Store().Team().GetUserTeamIds(userID, true)
 	if nErr != nil {
