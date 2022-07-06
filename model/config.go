@@ -1828,9 +1828,9 @@ func (s *SupportSettings) SetDefaults() {
 		s.HelpLink = NewString(SupportSettingsDefaultHelpLink)
 	}
 
-	if !isSafeLink(s.ReportAProblemLink) {
-		*s.ReportAProblemLink = ""
-	}
+	// if !isSafeLink(s.ReportAProblemLink) {
+	// 	*s.ReportAProblemLink = ""
+	// }
 
 	if s.ReportAProblemLink == nil {
 		s.ReportAProblemLink = NewString(SupportSettingsDefaultReportAProblemLink)
